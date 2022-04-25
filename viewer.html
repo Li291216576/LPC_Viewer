@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+    <html lang="en">
+        <head>
+        <meta charset="UTF-8" />
+		<title>VIEWER</title>
+
+		<link rel="stylesheet" href="https://api.cloud.pkpm.cn/bimviewer/viewer/v5/obv.css" type="text/css"/>
+		<link rel="stylesheet" href="./css/style_css.css">
+		<link rel="stylesheet" href="./css/simple-scrollbar.css" type="text/css">
+		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+		<script src="https://api.cloud.pkpm.cn/bimviewer/viewer/v5/obv.js"></script>
+		<script src="./js/auth-helper-es5.js"></script>
+		<script src="./js/viewer-initializer.js"></script>
+		<script src="./js/jquery.js"></script>
+		<script src="./js/jquery-ui-1.8.12.js"></script>
+
+	</head>
+	<body>
+		<div id="container" class="container">
+
+			<div id="header" class="header">
+				<img id="emsd_header" src="./img/EMSD.png" style="position: absolute;">
+				<img id="lpc_header" src="./img/LPC.png" style="position: absolute;">
+				<p id="title" style="color: white;position: absolute;margin: 0;"></p>
+				<img id="help_header" src="./img/HELP.png" style="position: absolute;">
+			</div>
+
+
+			<div id="functionBlock" class="functionBlock" style="position: fixed;z-index: 9997;">
+
+			<input type="button" id="functionBtn" value="FUN." class="functionBtn" />
+			<input type="button" id="functionBtn_back" value="Back" class="functionBtn" style="display: none;" />
+			<ul id="functionPanel" class="functionPanel" style="position: fixed;z-index: 9998;display: none;">
+				<li class="functionPanel-item"><a href="#" id="addModel">Add Model</a></li>
+
+				<li class="functionPanel-item"><a href="#" id="compareModel">Compare</a></li>
+
+				<li class="functionPanel-item"><a href="#" id="comment">Comment</a></li>
+			</ul>
+
+			<div id="addModelBlock" class="addModelBlock">
+				<p id="p_header" class="p_header">Add Model</p>
+				<input type="text" id="addModelSearch" class="addModelSearch" value="Search File Name Here" />
+				<ul id="addModelPanel" style="padding: 10px;">
+					Task1：这里用JavaScript去抓文件数据放进来
+				<ul>
+			</div>
+
+			<div id="compareBlock" class="compareBlock">
+				<p id="p_header" class="p_header">Compare Model</p>
+				<input type="text" id="compareSearch" class="compareSearch" value="Search File Name Here" />
+				<ul id="comparePanel" style="padding: 10px;">
+					Task2：这里用JavaScript去抓文件数据放进来
+				<ul>
+			</div>
+
+			</div>
+
+
+			<div id="commentBlock" class="commentBlock" style="display: ; position: fixed;z-index: 9996;">
+				
+				<div id="commentHead" class="commentHead">
+					<div id="commentHead_text" class="commentHead_text"><span>COMMENT PANEL</span></div>
+					<input id="exportComment" type="button" value="EXPORT" class="exportComment" />
+				</div>
+
+				<div id="markingTools" class="markingTools" style="overflow: hidden;" >
+					<button id="mark_arrow" class="mark__button" value="Arrow">
+						<img src="./icon/arrow-30.png" class="imgButton" /><span>ARROW</span>
+					</button>
+					<button id="mark_circle" class="mark__button" value="Circle">
+						<img src="./icon/circle-30.png" class="imgButton" /><span>CIRCLE</span>
+					</button>
+					<button id="mark_rectangle" class="mark__button" value="Rectangle">
+						<img src="./icon/rectangle-30.png"class="imgButton" /><span>RECTANGLE</span>
+					</button>
+					<button id="mark_text" class="mark__button" value="Text">
+						<img src="./icon/text-30.png" class="imgButton" /><span>TEXT</span>
+					</button>
+					<button id="mark_exit" class="mark__button" value="Exit">
+						<img src="./icon/cross-30.png" class="imgButton" /><span>EXIT</span>
+					</button>
+				</div>
+
+
+				<div id="commentData" class="commentData" style="position: relative; width:250px; height: 85%; margin: 5px;left: 5px;top: 0; background-color: ;display: inline; float: left;overflow: hidden;" >
+
+					<div id="commentBox" class="commentBox" >
+						<textarea id="commentContent" placeholder="Please enter your comment here." style="margin:0;padding: 5px;" /></textarea>
+							
+						<button id="takeScreenShot" class="takeScreenShot" style="margin: 0;">SUBMIT</button>
+					</div>
+
+					
+
+					<div id="resultPanel" class="resultPanel" style="position: relative;top: 10px; width: 250px;height: calc(100% - 135px);;margin: 0;padding: 0;">
+						
+						<div id="resultHead" class="resultHead" >
+								<span>IMAGE & COMMENT</span>
+						</div>
+						
+						<div id="resultList" style="position: relative; width:246px; height:calc(100% - 32px);background-color:rgba(211, 211, 211, 0.6);top: 30px; border-radius: 8px;
+    		 	box-shadow: 0px 0px 4px 4px rgba(150, 157, 249, 0.16);border: 2px solid rgb(81, 81, 81);font-size: 5px;" data-ss-container>
+    		 				<br/>
+
+							<div id="example_block" class="commentCase" style="position: relative; width:220px;height: auto; background-color: rgba(123, 123, 123, 0.5);left: 0;border-radius: 8px;border: 2.5px solid #000;">
+								
+								<a id="a_commentPicture_1" onclick=""><img id="img_commentPicture_1" class="picture_case" src="./testingPic/1.png" style=""  /></a>
+
+								<div id="commentList" class="commentList" style="display: ;width: 190px;margin: 0 auto;">
+									<div style="border-bottom: 2px solid #666;">
+										<span id="creatorTag" class="creator_time" ><strong>Creator:</strong> Li Haotian</span><br/>
+										<span id="timeTag" class="creator_time" ><strong>Time:</strong> 2022.04.18 18:26:52</span><br/>
+										<span id="commentTag" class="creator_time"><strong>Comment:</strong></span>
+										<button id="commentRevise" class="button_revise" style="display:none;">Revise</button>
+										<button id="commentSave" class="button_revise" style="display:none;">Revise</button>
+										<br/>
+										<span id="comment" style="position: relative;">hello world!hello world!hello world!hello world!</span>
+									</div>
+
+									<div style="border-bottom: 2px solid #666; position: relative; ">
+										<span id="creatorTag" class="creator_time" ><strong>Creator:</strong> admin</span><br/>
+										<span id="timeTag" class="creator_time" ><strong>Time:</strong> 2022.04.18 18:26:52</span><br/>
+										<span id="commentTag" class="creator_time"><strong>Comment:</strong></span>
+										<button id="commentRevise" class="button_revise" style="display:none;">Revise</button>
+										<button id="commentSave" class="button_revise" style="display:none;">Save</button>
+										<br/>
+										<span id="comment" style="position: relative; width: 220px;"> hello world!hello world!hello world!hello world!</span>
+									</div>
+									
+								</div>
+
+								<div id="commentPanel" style="display: none; border-bottom: 2px solid #666; height: 90px;width: 190px;margin: 0 auto;">
+
+									<textarea id="commentPanelarea" placeholder="Drop your notice here." style="border: 0; position: relative; width: 170px; height:60px;padding: 10px;resize: none;border-radius: 8px;  top: 5px;background-color: rgba(241, 241, 241, 1);" /></textarea>
+								</div>
+
+								<button name="comment" class="button_case" style="left: 10px;width: 80px;">Comment</button>
+								<button name="commentSubmit" class="button_case" style="left: 10px;width: 80px; display: none;">Submit</button>
+								<button class="button_case">Delete</button>
+								
+							</div>
+							<br/>
+				
+						</div>
+
+					</div>
+					
+				</div>
+				
+
+			</div>
+
+			<div id="viewer_3D" class="viewer_3D">3D</div>
+			<div id="viewer_2D" class="viewer_2D">2D</div>
+			<div id="viewer_2D_3D" class="viewer_2D_3D">2D_3D</div>
+
+			<div id="footer" class="footer">
+				<img id="emsd_footer" src="./img/EMSD.png" style="position: absolute;">
+				<img id="lpc_footer" src="./img/LPC.png" style="position: absolute;">
+			</div>
+
+		</div>
+
+		<script src="./js/simple-scrollbar.js"></script>
+		<script src="./js/markUp.js"></script>
+		<script src="./js/loadModel_3D.js"></script>
+		<script src="./js/loadModel_2D.js"></script>
+		<script src="./js/basicFunction.js"></script>
+		<script src="./js/reviseAddComment.js"></script>
+
+		<script type="text/javascript">
+			$(function(){
+			SimpleScrollbar.initAll();
+			adaptiveIcon();//启动的时候调整icons的大小
+			callViewer();//调用与format对应的画布
+
+			/*处理窗口resize的时候调整icons的大小*/
+				var resizeTimer=null;
+				$(window).bind('resize',function(){
+					if(resizeTimer)clearTimeout(resizeTimer);
+					resizeTimer = setTimeout(function(){
+						adaptiveIcon();
+						$("#title").css("height",$height*0.03).css("top",$height*0.0225).css("left",$height*0.40).css("font-size",$height*0.025).html("MODEL : "+title).css("vertical-align","top");
+					},100);
+				});
+
+			/*search function的聚焦和失焦*/
+			textFill($("#addModelSearch"));
+			textFill($("#compareSearch"));
+
+
+			/*处理function button移动的工作*/
+				var x1,x2,y1,y2;
+				obj_1=$("#functionBtn");
+				obj_2=$("#functionBtn_back");
+				block=$("#functionBlock");
+				ul=$("#functionPanel")
+				addblock=$("#addModelBlock");
+				compareblock=$("#compareBlock");
+				drag(obj_1,block,ul,addblock,compareblock);
+				drag(obj_2,block,ul,addblock,compareblock);
+				
+				$("#addModel").click(function(){
+					$("input[value='FUN.']").hide();
+					$("input[value='Back']").show();
+					$("#functionPanel").hide();
+					$("#addModelBlock").slideDown();
+					//$("#addModel").unbind("click");
+				});
+
+				$("#compareModel").click(function(){
+					$("input[value='FUN.']").hide();
+					$("input[value='Back']").show();
+					$("#functionPanel").hide();
+					$("#compareBlock").slideDown();
+					//$("#addModel").unbind("click");
+				});
+
+				$("#comment").toggle(function(){
+					$("#commentBlock").slideLeftShow();
+				},function(){
+					$("#commentBlock").slideLeftHide();
+				});
+
+				$(".mark__button").mouseover(function(){
+					$span_width=$(this).children('span').outerWidth();
+					$(this).children('span').css("left",-1*$span_width).show();
+				}).mouseout(function (){
+					$span_width=$(this).children('span').outerWidth();
+					$(this).children('span').css("left",($span_width)*-1).hide();
+				});
+				
+				reviseAddComment();
+
+			});
+
+
+			
+
+
+
+			
+		</script>
+	</body>
+</html>

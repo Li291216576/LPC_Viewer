@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"  name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>二维三维联动</title>
+    <link rel="stylesheet" href="https://api.cloud.pkpm.cn/bimviewer/viewer/v5/obv.css" type="text/css" />
+    <link rel="resource" type="application/l10n" href="https://api.cloud.pkpm.cn/bimviewer/viewer/v5/locale/locale.properties">
+
+    <script src="https://api.cloud.pkpm.cn/bimviewer/viewer/v5/obv.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.5.5/dist/css/uikit.min.css" />
+    <script src="https://lib.baomitu.com/echarts/4.7.0/echarts-en.min.js"></script>
+
+    <script src="auth-helper-es5.js"></script>
+    <script src="viewer-initializer.js"></script>
+    <style>
+        
+        .container{
+            background-color: rgb(239, 245, 251);
+            height: 97%;
+            width: 99%;
+            position: absolute;
+            align-self: center;
+            margin-top: 10px;
+            margin: auto;
+            }
+    </style>
+</head>
+<body>
+    <style type="text/css">
+        .my-obv-viewer3d {
+            position: relative;
+            float: left;
+            width: 55%;
+            height: 86%;
+            background-color: rgb(239, 245, 251);
+            /*display: inline-block;*/
+        }
+        .my-obv-viewer2d {
+            position: relative;
+            float: left;
+            width: 45%;
+            height: 86%;
+            background-color: rgb(0, 0, 0);
+            /*display: inline-block;*/
+        }
+
+        .banner_top{
+
+            background-color: rgb(67,66,66);
+            position: relative;
+            height: 60px;
+            
+        }
+
+        .banner_bottom{
+            background-color: rgb(67,66,66);
+            position: relative;
+            height: 60px;
+
+        }
+        .logo_left{
+            position: absolute;
+            width: 280px;
+            height: 60px;
+            left: 60px;
+        }
+        .logo_right{
+            position: absolute;
+            width: 280px;
+            height: 60px;
+            right: 60px;
+        }
+        .clear{ clear:both}
+    </style>
+
+    <div class="container">
+
+        <div class="banner_top">
+        <a href="https://www/llewellynandpartners.com/"><img src="Heading_Logo.png" class="logo_left"></a>
+        </div>
+        
+        <div id="viewer3d" class="my-obv-viewer3d"></div>
+        <div id="viewer2d" class="my-obv-viewer2d"></div>
+        <div class="clear"></div>
+
+        <div class="banner_bottom">
+        <a href="https://www/llewellynandpartners.com/"><img src="Heading_Logo.png" class="logo_right"></a>
+        </div>
+    </div>
+
+
+</body>
+
+<script type="module">
+    var linkageAddin, linkageAddinId, application;
+    const listenEvents = (obvApi) => {
+    // 获取插件
+        linkageAddinId = 'OBVAddins.Linkage';
+        const addinManager = obvApi.getAddinManager();
+        linkageAddin = addinManager.getAddin(linkageAddinId);
+        if (linkageAddin) {
+
+            linkageAddin.addEventListener(OBVAddins.Linkage.LinkageEventTypes.LinkageReady, () => {
+            console.log('数据已经就绪，可以开始联动了');
+            });
+            linkageAddin.addEventListener(OBVAddins.Linkage.LinkageEventTypes.ComponentNotFound, () => {
+            console.log('3维构件没有找到');
+            });
+            linkageAddin.addEventListener(OBVAddins.Linkage.LinkageEventTypes.EntityNotFound, () => {
+            console.log('2维构件没有找到');
+            });
+            linkageAddin.addEventListener(OBVAddins.Linkage.LinkageEventTypes.ComponentFound, (e) => {
+            console.log(e);
+            });
+            linkageAddin.addEventListener(OBVAddins.Linkage.LinkageEventTypes.EntityFound, (e) => {
+            console.log(e);
+            });
+            linkageAddin.addEventListener(OBVAddins.Linkage.LinkageEventTypes.LinkageSelectedDrawing, (e) => {
+            console.log('选择了图纸');
+            });
+            linkageAddin.addEventListener(OBVAddins.Linkage.LinkageEventTypes.LinkageExit, (e) => {
+            console.log('退出本次图纸联动');
+            });
+            linkageAddin.addEventListener(OBVAddins.Linkage.LinkageEventTypes.OpenDrawingError, (e) => {
+            console.log('打开图纸时出现错误');
+            });
+        }
+    };
+var fileName;
+async function main() {
+    // 创建2d视图窗口
+    const viewer2dContainer = document.getElementById('viewer2d');
+
+
+    const applicationOptions = {
+        getAccessToken: AuthHelper.getAccessToken,
+        refreshAccessToken: AuthHelper.getAccessToken,
+        serviceConfig: {
+            origin: 'https://api.cloud.pkpm.cn',
+            apiContextPath: '/bimserver/viewing/v3',
+        },
+    };
+
+
+    
+
+
+    // 加载模型
+    let urn = 'urn:bimbox.object:Testing_Bucket_byTim_First/';
+    //let urn = 'urn:bimbox.object:Testing_Bucket_byTim_First/Architecture.0001_pmodel';
+    fileName=window.location.href.split("=")[1];
+    fileName=fileName.split("&")[0];
+    urn = urn+fileName;
+
+
+    const builder = new OBV.Api.ObvBuilder();
+    const application = await builder.buildApplication(applicationOptions);
+    const obvDocument = await builder.loadDocument(application, urn);
+
+
+
+    const obvApi = await builder.buildViewer3d(application, document.getElementById('viewer3d'), {
+        addinConfigs: [
+            {
+                id: 'OBVAddins.Linkage',
+                noButton: false,
+                viewer2dContainer,
+                application: application,
+            },
+        ],
+    });
+
+    const viewer3dItems = obvDocument.get3dGeometryItems();
+    builder.load3dModels(obvApi, {
+        obvDocument: obvDocument,
+        viewer3dItem: viewer3dItems[0],
+    });
+    listenEvents(obvApi);
+}
+
+main();
+</script>
+
+
+
+
+</html>

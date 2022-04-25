@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+    <html lang="en">
+        <head>
+        <meta charset="UTF-8"  name="viewport" content="width=device-width,initial-scale=1.0" />
+        <title>Title</title>
+        <link rel="stylesheet" href="https://api.cloud.pkpm.cn/bimviewer/viewer/v5/obv.css" type="text/css" />
+        <link rel="resource" type="application/l10n" href="https://api.cloud.pkpm.cn/bimviewer/viewer/v5/locale/locale.properties">
+        <script src="https://api.cloud.pkpm.cn/bimviewer/viewer/v5/obv.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.5.5/dist/css/uikit.min.css" />
+        <script src="https://lib.baomitu.com/echarts/4.7.0/echarts-en.min.js"></script>
+        <style>
+            @media (max-width: 760px) {
+              .my-obv-domContainer {
+                top: 110px !important;
+                right: 0 !important;
+                /*display: block !important;*/
+              }
+              .my-obv-domContainer button {
+                font-size: 12px;
+                padding: 0 10px;
+              }
+            }
+            html, body {
+              width: 100%;
+              height: 100%;
+              margin: 0px;
+              padding: 0px;
+              background: #3c3f41;
+            }
+            .my-obv-viewer {
+              position: relative;
+              width: 100%;
+              height: 100%;
+              display: inline-block;
+            }
+            .my-obv-domContainer {
+              position: absolute;
+              z-index: 99;
+              top: 160px;
+              right: 8px;
+              display: flex;
+              flex-wrap: wrap-reverse;
+              flex-direction: column;
+            }
+            .my-obv-domContainer button {
+              border-radius: 30px;
+              margin-top: 20px;
+              margin-right: 20px;
+              float: right;
+            }
+        </style>
+        </head>
+        <body>
+            <style>
+    @media (max-width: 760px) {
+        .my-obv-domContainer select{
+            width: 140px !important;
+            height: 30px !important;
+            font-size: 12px !important;
+        }
+    }
+    .my-obv-domContainer option{
+        color: black;
+        background: #fff;
+        line-height: 20px;
+    }
+    .my-obv-domContainer option:hover{
+        background: #EBCCD1;
+    }
+    .my-obv-domContainer select{
+        font-family: "微软雅黑";
+        margin-top:20px;
+        background: rgba(0,0,0,0);
+        width: 180px;
+        height: 35px;
+        font-size: 17px;
+        color: black;
+        text-align: center;
+        border: 1px #1a1a1a solid;
+        border-radius: 5px;
+        padding-left: 2px;
+    }
+    .my-obv-domContainer select:focus{
+        border: 2px #ddd solid;
+        box-shadow: 0 0 15px 1px #0f7ae5;
+    }
+</style>
+<div id="viewer" class="my-obv-viewer"></div>
+<div id="domContainer" class="my-obv-domContainer">
+    <div>
+        <button id="enter-edit" class="uk-button uk-button-primary">进入编辑模式</button>
+        <button id="takeScreenShot" class="uk-button uk-button-primary">导出截图</button>
+        <button id="out-edit" class="uk-button uk-button-primary">退出编辑模式</button>
+    </div>
+    <div class="select-signIn">
+        <span style="color: black;margin-left: 20px;">标记模式：</span>
+        <select id="setMarkupType">
+            <option value="Arrow">箭头</option>
+            <option value="Circle">椭圆</option>
+            <option value="Rectangle">矩形</option>
+            <option value="Text">文字</option>
+        </select>
+    </div>
+</div>
+
+            <script type="module">
+            async function main () {
+  const applicationOptions = {
+    getAccessToken: getAccessToken,
+    refreshAccessToken: getAccessToken,
+    serviceConfig: {
+      origin: 'https://api.cloud.pkpm.cn',
+      apiContextPath: '/bimserver/viewing/v3',
+    },
+  };
+  // 加载模型
+  let urn = 'urn:bimbox.object:viewing_bucket/rvt-model';
+  const builder = new OBV.Api.ObvBuilder();
+  const application = await builder.buildApplication(applicationOptions);
+  const obvDocument = await builder.loadDocument(application, urn);
+  const obvApi = await builder.buildViewer3d(application, document.getElementById('viewer'), {
+    // 插件id,OBV中插件开发，命名请遵循{OBVAddins.xxx}的格式
+    addinConfigs: [
+      {
+        id: 'OBVAddins.Markup',
+        noButton: false,
+      },
+    ],
+  });
+  const viewer3dItems = obvDocument.get3dGeometryItems();
+  builder.load3dModels(obvApi, {
+    obvDocument: obvDocument,
+    viewer3dItem: viewer3dItems[0],
+  });
+
+  function getMarkupAddin () {
+    let markupAddin;
+    const markupAddinId = 'OBVAddins.Markup';
+    // 获取管理插件的addinManager
+    const addinManager = obvApi.getAddinManager();
+    // 通过addinManager获取插件
+    markupAddin = addinManager.getAddin(markupAddinId);
+    return markupAddin;
+  }
+
+  document.getElementById('enter-edit').onclick = function () {
+    const markupAddin = getMarkupAddin();
+    if (markupAddin) {
+      markupAddin.enterEditMode();
+      alert('插件已进入编辑模式！');
+    }
+  };
+
+  document.getElementById('setMarkupType').onchange = function (event) {
+    const markupAddin = getMarkupAddin();
+    if (markupAddin) {
+      markupAddin.setMarkupType(event.target.value);
+    }
+  };
+
+  document.getElementById('takeScreenShot').onclick = function () {
+    const markupAddin = getMarkupAddin();
+    if (markupAddin.isActive) {
+      // 这里可以自己定义尺寸
+      markupAddin.takeScreenShot(500, 500).then((result) => {
+        // 如果浏览器支持msSaveOrOpenBlob方法（也就是使用IE浏览器的时候），那么调用该方法去下载图片
+        if (window.navigator.msSaveOrOpenBlob) {
+          const bstr = atob(result.blobUrl.split(',')[1]);
+          let n = bstr.length;
+          const u8arr = new Uint8Array(n);
+          while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+          }
+          const blob = new Blob([u8arr]);
+          window.navigator.msSaveOrOpenBlob(blob, 'chart-download' + '.' + 'png');
+        } else {
+          // 这里就按照chrome等新版浏览器来处理
+          const a = document.createElement('a');
+          a.href = result.blobUrl;
+          a.setAttribute('download', 'chart-download');
+          a.click();
+        }
+      });
+    } else {
+      alert('请点击按钮进入 *编辑模式* 进行导出截图！');
+    }
+  };
+
+  document.getElementById('out-edit').onclick = function (event) {
+    const markupAddin = getMarkupAddin();
+    if (markupAddin.isActive) {
+      markupAddin.unloadMarkupData();
+      alert('插件退出编辑模式！');
+    } else {
+      alert('当前不在 *编辑模式* 状态');
+    }
+  };
+}
+
+main();
+
+// 访问的令牌 getAccessToken 和 令牌有效期 expiresIn 
+function getAccessToken(callBack) {
+    callBack('eyJhbGciOiJSUzI1NiJ9.eyJzY29wZSI6WyJvYnY6cmVhZCJdLCJleHAiOjE2NTAzNDI3NzgsImNsaWVudF9pZCI6ImFlY3dvcmtzLW9idi1jb21tdW5pdHkiLCJqdGkiOiJkMWY0NTQ5OS05ZDEwLTQ1MjMtOTMwMi1jM2QzZmQ5ZWJlZTgifQ.QEsHh2JoFyzgM5gsFHSP6w2kS3WkXoo1l2M16N_e_7v04scjITCE_LSvY0C72fbrWg_8UtEqIUsLXx4t7E5I_hfoR7FLl8hAWUy5K-_elHfPskvXqZy5uU4TSgzRBty77gBgt4TNksOt94Jsg2YaLqZYyGr-cvVzD7PTMJIauH-2xgYMZxUIKLyFFhTXfl9wgywfv4i7oZFGc-Rmeu0Fo_Ke6otUMbAcoI5BroGNgICDAt7tpLJj3vUYXL1n6gQcLZQokSBvaBm4z5Z5YVG9HZHA0bTKjKvwrTZrECdENO704IlJAMuhzAT7XYE9TUqUOgYpD6BtZKKx_G6asezaGw', 36000)
+}
+
+            </script>
+        </body>
+    </html>

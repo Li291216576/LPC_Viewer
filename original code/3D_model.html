@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>加载3d模型</title>
+    <link rel="stylesheet" href="https://api.cloud.pkpm.cn/bimviewer/viewer/v5/obv.css" type="text/css" />
+    <script src="https://api.cloud.pkpm.cn/bimviewer/viewer/v5/obv.js"></script>
+    <script src="auth-helper-es5.js"></script>
+    <script src="viewer-initializer.js"></script>
+    <style>
+        .my-button {
+            margin: 5px;
+            width: 100px;
+            height: 50px;
+            }
+
+        .my-obv-viewer {
+            position:relative;
+            height:84%;
+            -webkit-box-flex:1;
+            -ms-flex:1;
+            flex:1;
+            }
+
+        .container{
+            background-color: rgb(239, 245, 251);
+            height: 97%;
+            width: 99%;
+            position: absolute;
+            align-self: center;
+            margin-top: 10px;
+            margin: auto;
+            }
+    </style>
+</head>
+<body>
+    <div  class="container">
+        <div style="background-color: rgb(67,66,66);height: 60px;">
+        <a href="https://www/llewellynandpartners.com/"><img src="Heading_Logo.png" width="280" height="60" style="position: absolute; left: 60px"></a>
+        </div>
+        
+        <a id="load3dModel" class="my-button" style="cursor: pointer;z-index: 9999;position:absolute;left: 50px;"><img src="add3D.svg" width="140" height="50"></a>
+ <!--       
+ <a id="load2dModel" class="my-button" style="cursor: pointer;z-index: 9999;position:absolute;left: 240px;"><img src="add2D.svg" width="140" height="50"></a>
+ -->
+        <a id="unload3dModel" class="my-button" style="cursor: pointer;z-index: 9999;position:absolute;left: 240px;"><img src="delete.svg" width="140" height="50"></a>
+            
+        <br>
+        <div id="viewer" class="my-obv-viewer" style="display:'';"></div>
+        <!--<div id="viewer2" class="my-obv-viewer" style="display: none;"></div>-->
+        <br>
+
+        <div style="position: relative;background-color: rgb(67,66,66);height: 60px;bottom: 0px;">
+        <a href="https://www/llewellynandpartners.com/"><img src="Heading_Logo.png" width="280" height="60" style="position: absolute; right: 60px"></a>
+        </div>
+    </div>
+<!--<div>
+        <button id="load3dModel" class="my-button">加载模型</button>
+        <button id="load2dModel" class="my-button">加载二维模型</button>
+        <button id="unload3dModel" class="my-button">卸载模型</button>
+    </div>-->
+       
+        <script>
+
+
+            // 定义一个全局的对象，作为 namespace, 持有实例中的对象
+            window.MyOBVExample = window.MyOBVExample || {};
+            const load3dModelBtn = document.getElementById('load3dModel');
+            //const load2dModelBtn = document.getElementById('load2dModel');
+            const unload3dModelBtn = document.getElementById('unload3dModel');
+
+            /*这个方法来自obv.js*/
+            const applicationOptions = {
+                // 配置 OBV 服务端（BIMServer）API 服务的 origin，这个适合于私有部署的用户使用
+                // 如果不配置，则默认为 'https://api.cloud.aecworks.cn'
+                serviceConfig: {
+                    origin: 'https://api.cloud.pkpm.cn',
+                    apiContextPath: '/bimserver/viewing/v3',
+                },
+                getAccessToken: AuthHelper.getAccessToken,
+            };
+
+            //alert(AuthHelper.getAccessToken);
+
+            // 加载多个三维模型并且配置插件
+            /*调用ViewerInitializer中的方法来展示三维模型*/
+            async function load3dModel() {
+                fileName=window.location.href.split("=")[1];
+                fileName=fileName.split("&")[0];
+                alert(fileName);
+                root='urn:bimbox.object:Testing_Bucket_byTim_First/';
+                documentUrn=root+fileName;//"testing_6_ifc"
+                //documentUrn=root;
+                //alert(documentUrn);
+
+                //'urn:bimbox.object:createlibtest/Architecture_ifc'
+                const options = {
+                    applicationOptions: applicationOptions,
+
+                    viewerContainer: document.getElementById('viewer'),
+                    documentUrnList: [
+                         {
+                            documentUrn: documentUrn,
+                            offset: { x: 500, y: 500, z: 500 },
+                        },
+                    ],
+
+                    viewer3dConfig: {
+                        addinConfigs: [
+                            {
+                                id: 'OBVAddins.Measure',
+                                noButton: false,
+                            },
+                        ],
+                    },
+                };
+                const viewerInitializer = new ViewerInitializer();//第一步：实例化
+                const application = await viewerInitializer.buildApplication(applicationOptions);//第二步：创建application
+                const documentList = await viewerInitializer.loadDocumentList(options.documentUrnList);//第三步：创建ObvDocument管理视图
+                const viewer3dApi = await viewerInitializer.load3dModel(
+                    options.viewerContainer,
+                    options.viewer3dConfig
+                );//第四步创建viewer容器，在viewer中加载视图
+                
+                // options.viewer3dConfig.addinConfigs[2].application = application;
+                // options.viewer3dConfig.addinConfigs[2].documentFile = documentList;
+            }
+
+           /* async function load2dModel() {
+                const options = {
+                    applicationOptions: applicationOptions,
+                    viewerContainer: document.getElementById('viewer2'),
+                    documentUrn: 'urn:bimbox.object:Testing_Bucket_byTim_First/first_floor_dwg',
+                };
+                const viewerInitializer = new ViewerInitializer();
+                return await viewerInitializer.load2dModel(options);
+            }*/
+            
+
+            //
+            load3dModelBtn.addEventListener('click', function() {
+                //alert("hello");
+                //document.getElementById("viewer").style.display='';
+                //document.getElementById("viewer2").style.display='none';
+                
+                load3dModel().then((viewer3dApi) => {
+                    if (!window.MyOBVExample.viewer3dApi) 
+                    {
+                        window.MyOBVExample.viewer3dApi = viewer3dApi;
+                    } 
+                    else 
+                    {
+                        console.error('obvApi已存在');
+                    }
+                });
+            });
+
+              
+            /*load2dModelBtn.addEventListener('click', function() {
+                //alert("hello2");
+                document.getElementById("viewer").style.display='none';
+                document.getElementById("viewer2").style.display='';
+
+                load2dModel().then(({ viewer2dApi, application }) => {
+                    
+                    if(!window.obvApi)
+                    {
+                        window.obvApi=viewer2dApi;
+                        //window.MyOBVExample.application=application;
+                    }
+                    else
+                    {
+                        console.error("obvApi已存在");
+                    }
+                });
+            });*/
+
+
+            unload3dModelBtn.addEventListener('click', () => {
+                if (window.MyOBVExample.obvApi) {
+                    const obvApi = window.MyOBVExample.obvApi;
+                    if (obvApi) {
+                        obvApi.uninitializeViewer();
+                        window.MyOBVExample.obvApi = undefined;
+                    }
+                } else {
+                    console.error('OBVApi 未创建成功！');
+                }
+            });
+        </script>
+    </body>
+</html>
