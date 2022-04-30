@@ -44,7 +44,6 @@ function adaptiveIcon()/*调整页面icon来适应网页页面*/
 	$("#markingTools").css("height",($height*0.8-60)*0.98);
 	$("#commentData").css("height",($height*0.8-60)*0.98);
 	$("#resultPanel").css("height",((($height*0.8-60)*0.98)-144)*0.98);
-	//console.log("Comment Block:"+$("#commentBlock").css("height"));
 
 }
 

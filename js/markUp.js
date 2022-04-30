@@ -1,9 +1,17 @@
+var m=500;
+var n=500;
 var markArr = new Array();
 var viewpointArr = new Array();
-var userNameArr = new Array();
-var timeArr = new Array();
 var imgArr = new Array();
-var commentArr= new Array();
+var commentArr= new Array(m);
+var commentorArr = new Array(m);
+var timeArr = new Array(m);
+for(var i=0;i<m;i++)
+{
+    commentorArr[i]=new Array();
+    commentArr[i]=new Array();
+    timeArr[i]=new Array();
+}
 
 function markUp(){
 
@@ -29,41 +37,86 @@ function markUp(){
         const markupAddin=getMarkupAddin();
         if(markupAddin.isActive){
             markupAddin.takeScreenShot(400,400).then((result)=>{
-                
                 markArr.push(markupAddin.getMarkupData());
                 viewpointArr.push(obvApi.getViewPointInfo());
                 Markup_Length=imgArr.push(result.blobUrl);
-                userNameArr[Markup_Length-1] = new Array();
-                timeArr[Markup_Length-1] = new Array();
-                commentArr[Markup_Length-1] = new Array();
-                
-                userNameArr[Markup_Length-1].push(userName);
+                commentArr[Markup_Length-1].push($("#commentContent").val());
+                commentorArr[Markup_Length-1].push(userName);
                 timeArr[Markup_Length-1].push(getTime());
-
-                
-                var htmlStr="";
-                for(let i=0;i<Markup_Length;i++)
-                {
-                    htmlStr+=outputCase(i);
-                }
-                $(".ss-content").empty().append(htmlStr);
+                showScreenShotInfo(Markup_Length);
             });
         }
     });
 
 }
 
+function showScreenShotInfo(length){
+    var htmlStr="";
+    for(let i=0;i<length;i++)
+    {
+        htmlStr+=outputCase(i);
+    }
+    $(".ss-content").empty().append(htmlStr);
+    $("#resultList").find("#creatorTag").each(function(){
+        creator = $(this).text();
+        creator = creator.slice(9,creator.length);
+        if(creator==userName){
+            $(this).siblings("#commentRevise").show();
+        }
+    });
+
+    postData();
+}
+
+function postData(){
+    var settings={
+        "async":false,
+        "url":"http://127.0.0.1/zentaopms/module/file/ext/view/viewer/backend/dataProcess.php",
+        "type":"POST",
+        "timeout":0,
+        "data":{
+            "modelName":fileName,
+            "viewpointArr":viewpointArr,
+            "markArr":markArr,
+            "imgArr":imgArr,
+            "commentArr":commentArr,
+            "commentorArr":commentorArr,
+            "timeArr":timeArr,
+        }
+    }
+    $.ajax(settings).success(function(response){
+        console.log(response);
+    });
+}
+
 function outputCase(id){
     var tmpStr="";
     tmpStr+='<br/>';
-    tmpStr+='<div id="example_block" class="commentCase" style="position: relative; width:220px;height: 270px; background-color: rgba(123, 123, 123, 0.5);left: 0;border-radius: 8px;border: 2.5px solid #000;">';
+    tmpStr+='<div id="'+id+'" class="commentCase" style="position: relative; width:220px;height: auto; background-color: rgba(123, 123, 123, 0.5);left: 0;border-radius: 8px;border: 2.5px solid #000;">';
     tmpStr+='<a id="'+id+'" onclick="getMark('+id+')"><img id="'+id+'" class="picture_case" src="'+imgArr[id]+'" style=""  /></a>';
-    tmpStr+='<span class="creator_time" ><strong>Creator:</strong> '+userNameArr[id][0]+'</span><br/>';
-    tmpStr+='<span class="creator_time" ><strong>Time:</strong> '+timeArr[id][0]+'</span>';
-    tmpStr+='<button id="'+id+'" name="Comments" class="button_case" style="left: 10px;">Comments</button>';
-    tmpStr+='<button id="'+id+'" name="Edit" class="button_case" style="left: 5px;">Edit</button>';
-    tmpStr+='<button id="'+id+'" onclick="deleteMark(id)" name="Delete" class="button_case">Delete</button></div><br/>';
+    tmpStr+='<div id="commentList" class="commentList" style="display: ;width: 190px;margin: 0 auto;">';
+    tmpStr+=outputComment(id);
+    tmpStr+='</div>';
+    tmpStr+='<div id="commentPanel" style="display: none; border-bottom: 2px solid #666; height: 90px;width: 190px;margin: 0 auto;">';
+    tmpStr+='<textarea id="commentPanelarea" placeholder="Drop your notice here." style="border: 0; position: relative; width: 170px; height:60px;padding: 10px;resize: none;border-radius: 8px;  top: 5px;background-color: rgba(241, 241, 241, 1);" /></textarea></div>';
+    tmpStr+='<button name="comment" class="button_case" style="left: 10px;width: 80px;">Comment</button>';
+    tmpStr+='<button name="commentSubmit" class="button_case" style="left: 10px;width: 80px; display: none;">Submit</button>';
+    tmpStr+='<button class="button_case" onclick="deleteMark('+id+')">Delete</button></div>';
     return tmpStr;
+}
+
+function outputComment(id){
+    comment_length = commentArr[id].length;
+    var commentStr="";
+    for(var i=0;i<comment_length;i++)
+    {
+        commentStr+='<div id="'+i+'" style="border-bottom: 2px solid #666;">';
+        commentStr+='<span id="creatorTag" class="creator_time" ><strong>Creator:</strong> '+commentorArr[id][i]+'</span><br/>';
+        commentStr+='<span id="timeTag" class="creator_time" ><strong>Time:</strong> '+timeArr[id][i]+'</span><br/><span id="commentTag" class="creator_time"><strong>Comment:</strong></span>';
+        commentStr+='<button id="commentRevise" class="button_revise" style="display:none;">Revise</button><button id="commentSave" class="button_revise" style="display:none;">Save</button><br/>';
+        commentStr+='<span id="comment" style="position: relative;">'+commentArr[id][i]+'</span></div>';
+    }
+    return commentStr;
 }
 
 function getMarkupAddin () {
@@ -87,23 +140,16 @@ function getMark(id){
     }
 }
 
-
-function deleteMark(id){   
+function deleteMark(id){
     markArr.splice(id,1);
     viewpointArr.splice(id,1);
-    userNameArr.splice(id,1);
-    timeArr.splice(id,1);
     imgArr.splice(id,1);
     Markup_length=imgArr.length;
-    var htmlStr="";
-    for(let i=0;i<Markup_length;i++)
-    {
-        htmlStr+=outputCase(i);
-    }
-    $(".ss-content").empty().append(htmlStr);
+    commentorArr.splice(id,1);
+    timeArr.splice(id,1);
+    commentArr.splice(id,1);
+    showScreenShotInfo(Markup_length);
 }
-
-
 
 function getTime(){
     var myDate = new Date();
