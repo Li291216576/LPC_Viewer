@@ -38,7 +38,9 @@ function markUp(){
         if(markupAddin.isActive){
             markupAddin.takeScreenShot(400,400).then((result)=>{
                 markArr.push(markupAddin.getMarkupData());
+                //console.log("marking Information:\n"+typeof(markupAddin.getMarkupData()));
                 viewpointArr.push(obvApi.getViewPointInfo());
+                //console.log("Viewpoint Information:\n"+obvApi.getViewPointInfo());
                 Markup_Length=imgArr.push(result.blobUrl);
                 commentArr[Markup_Length-1].push($("#commentContent").val());
                 commentorArr[Markup_Length-1].push(userName);
@@ -71,7 +73,7 @@ function showScreenShotInfo(length){
 function postData(){
     var settings={
         "async":false,
-        "url":"http://127.0.0.1/zentaopms/module/file/ext/view/viewer/backend/dataProcess.php",
+        "url":"http://localhost/zentaopms/module/file/ext/view/viewer/backend/markup_dataProcess.php",
         "type":"POST",
         "timeout":0,
         "data":{
@@ -85,7 +87,7 @@ function postData(){
         }
     }
     $.ajax(settings).success(function(response){
-        console.log(response);
+        //console.log(response);
     });
 }
 

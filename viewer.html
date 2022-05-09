@@ -12,6 +12,8 @@
 		<script src="./js/auth-helper-es5.js"></script>
 		<script src="./js/viewer-initializer.js"></script>
 		<script src="./js/jquery.js"></script>
+		<script src="./js/fileSaver.js"></script>
+		<script src="./js/jquery.wordexport_1.js"></script>
 		<script src="./js/jquery-ui-1.8.12.js"></script>
 
 	</head>
@@ -153,10 +155,11 @@
 				
 
 			</div>
-
+	
 			<div id="viewer_3D" class="viewer_3D">3D</div>
 			<div id="viewer_2D" class="viewer_2D">2D</div>
 			<div id="viewer_2D_3D" class="viewer_2D_3D">2D_3D</div>
+			
 
 			<div id="footer" class="footer">
 				<img id="emsd_footer" src="./img/EMSD.png" style="position: absolute;">
@@ -166,19 +169,25 @@
 		</div>
 
 		<script src="./js/simple-scrollbar.js"></script>
-		<script src="./js/markUp.js"></script>
-		<script src="./js/reviseAddComment.js"></script>
+		<script src="./js/markup.js"></script>
+		<script src="./js/markup_reviseAddComment.js"></script>
 		<script src="./js/loadModel_3D.js"></script>
 		<script src="./js/loadModel_2D.js"></script>
+		<script src="./js/markup_dataInitialization.js"></script>
 		<script src="./js/basicFunction.js"></script>
 		
 
 		<script type="text/javascript">
 			$(function(){
+
+
+			
+
 			SimpleScrollbar.initAll();
 			adaptiveIcon();//启动的时候调整icons的大小
 			callViewer();//调用与format对应的画布
-
+			dataInit();
+			
 			/*处理窗口resize的时候调整icons的大小*/
 				var resizeTimer=null;
 				$(window).bind('resize',function(){
@@ -234,6 +243,61 @@
 					$span_width=$(this).children('span').outerWidth();
 					$(this).children('span').css("left",($span_width)*-1).hide();
 				});
+
+
+				let data = {
+                	fileName: "测试word",//文档名
+                	fileType: ".doc",//文档类型  经测试  可以doc xls html 其他的自己去试
+                	isHeader:true,//是否显示页眉  *xls  不要设置页眉页脚  改为false
+                	isFooter:true,//是否显示页脚  *xls  不要设置页眉页脚  改为false
+                	header: emsd_header,//页眉标题
+                	footer: lpc_footer,//页脚标题/*style="width:20px; height:60px;" */
+                	// styles: $("#reportWrap"),//要导出的内容style
+                	// updateExportCss:$("#updateExportCss")//需要修改导出的word样式  宽度高度 margin之类的
+            	}
+
+
+				$("#exportComment").on("click",function(){
+					alert("hello");
+					var html = "";
+					html += "<div id='exportInfo'>";
+					html = html + "<h2 style='text-align:center;'>"+title+"- MARK UP REPORT</h2><br>";
+					html = html + "<p> Document Name: "+title;+"</p>";
+					html = html + "<p> Quantity of Note(s): "+imgArr.length+"</p>";
+					html = html + "<p> Export Date: "+getTime();+"</p>";
+					html = html + "<p> Export By: "+userName;+"</p><br>";
+					html = html + "<hr>";
+					html = html + markupInfoTable();
+					html += "</div>";
+
+					$(this).after(html);
+					$(this).siblings("#exportInfo").wordExport(data);
+					$(this).siblings("#exportInfo").remove();
+
+				});
+
+				function markupInfoTable(){
+					var str = "<div>";
+					for(var i=0;i<imgArr.length;i++){
+						str += "<p>Note "+(i+1)+"</p>";
+						str += "<table align='center'>"
+						str += "<tr><th>Screen Capture</th><td><img width='350' height='350' src='"+imgArr[i]+"'></td></tr>";
+						str += "<tr><th>Content</th><td>"+commentArr[i][0]+"</td></tr>";
+						str += "<tr><th>Content</th><td><div>"
+						for(var j=1;j<commentArr[i].length;j++){
+							
+							str += "<p>"+ commentorArr[i][j]+" "+timeArr[i][j]+"</p>";
+							str += "<p>"+ commentArr[i][j]+"</p>";
+							str += "<br>";
+						}
+						str += "</div></td></tr>"
+						str += "<tr><th>Originator/Author</th><td>"+commentorArr[i][0]+"</td></tr>";
+						str += "<tr><th>Updated Time</th><td>"+timeArr[i][0]+"</td></tr>";
+						str += "<tr><th>Upload Version</th><td>null</td></tr>";
+						str += "</table></div>"
+					}
+					return str;
+				}
 				
 				reviseAddComment();
 
