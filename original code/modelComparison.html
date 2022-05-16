@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+    <html lang="en">
+        <head>
+        <meta charset="UTF-8"  name="viewport" content="width=device-width,initial-scale=1.0" />
+        <title>Title</title>
+        <link rel="stylesheet" href="https://api.cloud.pkpm.cn/bimviewer/viewer/v5/obv.css" type="text/css" />
+        <link rel="resource" type="application/l10n" href="https://api.cloud.pkpm.cn/bimviewer/viewer/v5/locale/locale.properties">
+        <script src="https://api.cloud.pkpm.cn/bimviewer/viewer/v5/obv.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.5.5/dist/css/uikit.min.css" />
+        <script src="https://lib.baomitu.com/echarts/4.7.0/echarts-en.min.js"></script>
+        <style>
+            @media (max-width: 760px) {
+              .my-obv-domContainer {
+                top: 110px !important;
+                right: 0 !important;
+                /*display: block !important;*/
+              }
+              .my-obv-domContainer button {
+                font-size: 12px;
+                padding: 0 10px;
+              }
+            }
+            html, body {
+              width: 100%;
+              height: 100%;
+              margin: 0px;
+              padding: 0px;
+              background: #3c3f41;
+            }
+            .my-obv-viewer {
+              position: relative;
+              width: 100%;
+              height: 100%;
+              display: inline-block;
+            }
+            .my-obv-domContainer {
+              position: absolute;
+              z-index: 99;
+              top: 160px;
+              right: 8px;
+              display: flex;
+              flex-wrap: wrap-reverse;
+              flex-direction: column;
+            }
+            .my-obv-domContainer button {
+              border-radius: 30px;
+              margin-top: 20px;
+              margin-right: 20px;
+              float: right;
+            }
+        </style>
+        </head>
+        <body>
+            <div id="viewer" class="my-obv-viewer"></div>
+
+            <script type="module">
+            let viewer3dItems;
+let compareAddin;
+
+// 被与之对比的模型，对应此处的模型A
+let sourceModel = 'urn:bimbox.object:viewing_bucket/modelComparison_A';
+// 要查看变换的模型，对应此处的模型B
+let comparedModel = 'urn:bimbox.object:viewing_bucket/modelComparison_B';
+// 对比结果的存放位置
+let compareResult = 'urn:bimbox.object:translation_result_v2/1T9SQ74Mn4EV2Pea5N2fuP0a';
+// 模型A、模型B对应的guid
+let viewPairs = [['90691d83-2fcd-07e1-26d3-b6d2818101f6', '90691d83-2fcd-07e1-26d3-b6d2818101f6']];
+
+// 判断三个事件是否都执行完毕
+let isModelTreeLoaded = false;
+let isPropertyLoaded = false;
+let isGeometryLoaded = false;
+
+async function main() {
+    // 创建实例需要传入的参数，部署环境serviceConfig 和 用户有效期getAccessToken
+    const applicationOptions = {
+        // 配置 OBV 服务端（BIMServer）API 服务的 origin，这个适合于私有部署的用户使用
+        getAccessToken: getAccessToken,
+        refreshAccessToken: getAccessToken,
+        serviceConfig: {
+            origin: 'https://api.cloud.pkpm.cn',
+            apiContextPath: '/bimserver/viewing/v3',
+        },
+    };
+
+    // 配置容器信息、插件信息
+    const options = {
+        viewerContainer: document.getElementById('viewer'),
+        viewer3dConfig: {
+            addinConfigs: [
+                {
+                    id: 'OBVAddins.Compare', // 插件id,OBV中插件开发，命名请遵循{OBVAddins.xxx}的格式
+                    noButton: false, // 不显示插件button
+                },
+            ],
+        },
+    };
+    // 实例化 Builder，用于模型加载
+    const builder = new OBV.Api.ObvBuilder();
+    // 创建 Application 对象
+    const application = await builder.buildApplication(applicationOptions);
+    // 创建 document 管理视图，加载完成后可以调用接口
+    const obvDocument = await builder.loadDocument(application, comparedModel);
+    // 创建 viewer 容器, 创建API
+    const obvApi = await builder.buildViewer3d(application, options.viewerContainer, options.viewer3dConfig);
+    // 获取指定 guid 对应的视图
+    viewer3dItems = obvDocument.getViewer3dItem(viewPairs[0][1]);
+    // 获取三维视图
+    builder.load3dModels(obvApi, {
+        obvDocument: obvDocument,
+        viewer3dItem: viewer3dItems,
+    });
+
+    // 加载 OBVAddins.Compare 插件
+    const compareAddinId = 'OBVAddins.Compare';
+    const addinManager = obvApi.getAddinManager();
+    compareAddin = addinManager.getAddin(compareAddinId);
+    if (!compareAddin) {
+        addinManager.loadAddin(compareAddinId);
+        compareAddin = addinManager.getAddin(compareAddinId);
+    }
+
+    // 监听属性是否加载完成
+    obvApi.addEventListener(OBV.ViewerEventTypes.V3dPropertiesLoadedEvent, async () => {
+        isPropertyLoaded = true;
+        await showResult();
+    });
+
+    // 监听几何是否加载完成
+    obvApi.addEventListener(OBV.ViewerEventTypes.V3dGeometryLoadedEvent, async () => {
+        isGeometryLoaded = true;
+        await showResult();
+    });
+    // 监听模型树是否加载完成
+    obvApi.addEventListener(OBV.ViewerEventTypes.V3dModelTreeLoadedEvent, async () => {
+        isModelTreeLoaded = true;
+        await showResult();
+    });
+}
+
+/*
+ * 解析对比结果
+ *
+ * OBV.ViewerEventTypes.V3dPropertiesLoadedEvent、
+ * OBV.ViewerEventTypes.V3dGeometryLoadedEvent、
+ * OBV.ViewerEventTypes.V3dModelTreeLoadedEvent
+ * 都触发后才能调用Compare插件的showResult方法展示结果
+ * */
+async function showResult() {
+    if (isGeometryLoaded && isPropertyLoaded && isModelTreeLoaded) {
+        getCompareResult().then((result) => {
+            // 调用obv插件-Compare 解析结果，并将数据展示在页面
+            compareAddin.setResultData(result, viewer3dItems.name);
+            const sourceModelInfo = { urn: sourceModel, guid: viewPairs[0][0], version: '1' };
+            const compareModelInfo = {
+                urn: comparedModel,
+                guid: viewPairs[0][1],
+                version: '2',
+            };
+            compareAddin.setFileInfo(sourceModelInfo, compareModelInfo);
+            compareAddin.showComparisonResult();
+            compareAddin.addEventListener('viewDetails', (e) => {
+                /*
+                 * 返回文件guid、文件urn以及文件version；
+                 * 用户可根据返回信息，实现模型加载；
+                 * */
+                alert(
+                    '版本' +
+                        e.target.version +
+                        ': ' +
+                        e.target.urn +
+                        '\n' +
+                        '\n' +
+                        '用户可根据返回信息，实现模型加载',
+                );
+            });
+        });
+    }
+}
+
+// 获取对比结果
+function getCompareResult() {
+    return new Promise((resolve, reject) => {
+        // 获取token
+        let token = '';
+        getAccessToken((data) => {
+            token = data;
+        });
+        const analysisResult = parseCompareResultUrl(compareResult);
+        const objectPath = OBV.Base64UrlSafe.encode(analysisResult.objectName + '/1.json');
+        const url = `https://api.cloud.pkpm.cn/bimserver/storage/v3/buckets/${analysisResult.bucketName}/objects/${objectPath}?objectKeyEncoding=base64`;
+        const xhr = new XMLHttpRequest(); // no arguments
+        xhr.open('GET', url, true);
+        xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send();
+        xhr.onload = function(res) {
+            const result = JSON.parse(res.target.response);
+            resolve(result);
+        };
+    });
+}
+
+// 获取 bucketName、objectName
+function parseCompareResultUrl(url) {
+    var splitArr = url.split(':');
+    if (splitArr && splitArr.length === 3) {
+        var a = splitArr[2];
+        var b = a.split('?');
+        if (b && b.length > 0) {
+            var c = b[0].split('/');
+            return {
+                bucketName: c[0],
+                objectName: c[1],
+            };
+        }
+    }
+}
+
+// 调用 main 函数进行代码的实现
+main();
+
+// 访问的令牌 getAccessToken 和 令牌有效期 expiresIn 
+function getAccessToken(callBack) {
+    callBack('eyJhbGciOiJSUzI1NiJ9.eyJzY29wZSI6WyJvYnY6cmVhZCJdLCJleHAiOjE2NTI1MDU1NTAsImNsaWVudF9pZCI6ImFlY3dvcmtzLW9idi1jb21tdW5pdHkiLCJqdGkiOiI4N2EwNzBmMi1lOTg1LTQ4YmEtYjM2OS1hNTQ5NmE1NzQ0MDkifQ.DszlI7g_QXpd_GKNVW5uEN53RskrzV8-8cJt6vTT6ndhru6ATzJMCXNWuUsKsjHIa5vZVfnOSBQPz_i7WoTjH-rnPzPkaaY9m7toiX7fqP0iV0_PJMTW1qU_Hu-XbKwy0pelvIiH4CPdxB4M28leXI8IVftsvUYgE9Tj-yRfjvqKqmFC0smXaDbAi0Q1Eacq0drWaXXoHmkiFD2Fjc9rK_Fgbs0mvkupp-osHlWqGuMi4khiQhawWGtWHXoRxWgYf-hhylTCporGHxiI4xV4FOBMupLkL7Jcz5Mrn8pUCClJjMns0osZxkrSsOOcfFeRdtEaE0TNSwt2npAnK6Ti_A', 36000)
+}
+
+            </script>
+        </body>
+    </html>

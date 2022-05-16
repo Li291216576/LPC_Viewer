@@ -58,7 +58,7 @@ function showScreenShotInfo(length){
     {
         htmlStr+=outputCase(i);
     }
-    $(".ss-content").empty().append(htmlStr);
+    $("#resultList .ss-content").empty().append(htmlStr);
     $("#resultList").find("#creatorTag").each(function(){
         creator = $(this).text();
         creator = creator.slice(9,creator.length);
@@ -160,9 +160,34 @@ function getTime(){
     var date = myDate.getDate();
     var hour = myDate.getHours();
     var minute = myDate.getMinutes();
-    alert(typeof(hour));
+    //alert(typeof(hour));
     var myTime = myDate.toTimeString();
     myTime = myTime.substr(0,8)
     var time = year+"-"+month+"-"+date+" "+myTime;
     return time;
 }
+
+function markupInfoTable(){
+    var str = "<div>";
+    for(var i=0;i<imgArr.length;i++){
+        str += "<p>Note "+(i+1)+"</p>";
+        str += "<table align='center'>"
+        str += "<tr><th>Screen Capture</th><td><img width='350' height='350' src='"+imgArr[i]+"'></td></tr>";
+        str += "<tr><th>Content</th><td>"+commentArr[i][0]+"</td></tr>";
+        str += "<tr><th>Content</th><td><div>"
+        for(var j=1;j<commentArr[i].length;j++){               
+            str += "<p>"+ commentorArr[i][j]+" "+timeArr[i][j]+"</p>";
+            str += "<p>"+ commentArr[i][j]+"</p>";
+            str += "<br>";
+        }
+        str += "</div></td></tr>"
+        str += "<tr><th>Originator/Author</th><td>"+commentorArr[i][0]+"</td></tr>";
+        str += "<tr><th>Updated Time</th><td>"+timeArr[i][0]+"</td></tr>";
+        str += "<tr><th>Upload Version</th><td>null</td></tr>";
+        str += "</table></div>"
+    }
+    return str;
+}
+
+
+

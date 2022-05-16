@@ -14,19 +14,55 @@ function callViewer() /*调用API：3D/2D/3D&2D*/
     	obj[key]=value;
     }
 
-    userName=obj['userName'].replace("#","");
+    fileNameArr = new Array();
+    titleArr = new Array();
 
-    title=obj['title'];
-    fileName=obj['fileName'];
-    format=fileName.split('_')[2];
+    nameTitleArr = JSON.parse(localStorage.getItem("nameTitleArr"));
+    console.log(nameTitleArr);
+    //console.log(nameTitleArr[0]["name"]);
+    for(var i=0;i<nameTitleArr.length;i++){
+    	fileNameArr.push(nameTitleArr[i]["name"]);
+    	titleArr.push(nameTitleArr[i]["title"]);
+    }
+
+    userName=obj['userName'].replace("#","");
+    title=titleArr[0];
+    fileName=fileNameArr[0];
+    format=fileNameArr[0].split('_')[2];
+    modelInfoInitialize();
 
     $("#title").css("height",$height*0.03).css("top",$height*0.0225).css("left",$height*0.40).css("font-size",$height*0.025).html("MODEL : "+title).css("vertical-align","top");
     //html("MODEL : "+title).css("font-size",$height*0.025).css("top",$height*0.005).css("left",$height*0.55);//.css("top",$height*0.0075).css("left",$width*0.5);
     
 
-    if(Format_3D.indexOf(format)!=-1){$("#viewer_3D").show(); loadModel_3D(fileName);}
-    else if(Format_2D.indexOf(format)!=-1){$("#viewer_2D").show();loadModel_2D(fileName)}
-    else if(Format_2D_3D.indexOf(format)!=-1){$("#viewer_2D_3D").show();}
+    if(Format_3D.indexOf(format)!=-1){$("#viewer_3D").show(); loadModel_3D(fileNameArr,1);}
+    else if(Format_2D.indexOf(format)!=-1){$("#viewer_2D").show();loadModel_2D(fileNameArr[0]);}
+    else if(Format_2D_3D.indexOf(format)!=-1){$("#viewer_2D_3D").show();interaction_2D3D(fileNameArr[0]);}
+}
+
+function modelInfoInitialize(){
+	var html= '';
+	html+='<li class="active-result" ><label for="'+titleArr[0]+'" style="color: rgb(211, 211, 211);">'+titleArr[0]+'(base model)</label></li>';
+	for(var i=1;i<titleArr.length;i++)
+	{
+		html+='<li class="active-result" ><label for="'+titleArr[i]+'">'+titleArr[i]+'</label><input type="checkbox" id="'+titleArr[i]+'" style="position: relative;float: right;"></li>'
+	}
+	$("#addModelBlock .chosen-results").append(html);
+	
+	html='';
+	html+='<div id="'+titleArr[0]+'" style="position: relative;width: 100%;height: 24px;">';
+	html+='<div id="baseModel" style="position: relative;width: 80%;overflow: hidden; white-space: nowrap;text-overflow: ellipsis;float: left; font-size: 13px;line-height: 24px; vertical-align: top;" title="'+titleArr[0]+'(base model)">'+titleArr[0]+'<strong>(base model)</strong></div>';
+	html+='</div>';
+	$("#addModelPanel .ss-content").append(html);
+            		
+    html= '';
+	for(var i=0;i<titleArr.length;i++)
+	{
+		
+		html+='<li class="active-result" ><label for="'+titleArr[i]+'">'+titleArr[i]+'</label><input type="checkbox" id="'+titleArr[i]+'" style="position: relative;float: right;"></li>'
+	}
+	$("#compareBlock .chosen-results").append(html);		
+
 }
 
 
@@ -52,14 +88,18 @@ function textFill(input)/*搜索栏的小功能：聚焦消除提示；失焦显
 {
 	var originalValue=input.val();
 	input.focus(function(){
+		$("#addModelBlock").css("background-color","rgba(128, 128, 128, 0.82)");
 	if($.trim(input.val())==originalValue)
 	{
 		input.val('');
+		
 	}
 	}).blur(function(){
+		$("#addModelBlock").css("background-color","rgba(128, 128, 128, 0.8)");
 	if($.trim(input.val())=='')
 	{
 		input.val(originalValue);
+		
 	}
 	});
 }

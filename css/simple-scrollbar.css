@@ -1,6 +1,7 @@
 .ss-wrapper {
     overflow : hidden;
     height   : 100%;
+    width: calc(100% - 4px);
     position : relative;
     z-index  : 1;
     float: left;
@@ -9,28 +10,32 @@
 .ss-content {
     height          : 100%;
     width           : 100%;
-    padding         : 0 60px 0 0;
+    padding         : 0px;
     position        : relative;
     right           : -11px;
-    overflow        : auto;
+    overflow-y        : auto;
     -moz-box-sizing : border-box;
     box-sizing      : border-box;
+   /* background: rgba(128, 128, 18, 1.0);*/
 }
 
 .ss-scroll {
   position            : relative;
-  background          : rgba(0, 0, 0, .5);
+  background          : rgba(0, 0, 0, 0);
   width               : 8px;
   border-radius       : 4px;
   top                 : 0;
   z-index             : 2;
   cursor              : pointer;
-  opacity: 0;
   transition: opacity 0.25s linear;
 }
 
-.ss-container:hover .ss-scroll {
-  opacity: 1;
+#addModelBlock:hover .ss-scroll {
+  background: rgba(0, 0, 0, .5);
+}
+
+#resultList:hover .ss-scroll {
+  background: rgba(0, 0, 0, .5);
 }
 
 .ss-grabbed {

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+    <html lang="en">
+        <head>
+        <meta charset="UTF-8"  name="viewport" content="width=device-width,initial-scale=1.0" />
+        <title>Title</title>
+        <link rel="stylesheet" href="https://api.cloud.pkpm.cn/bimviewer/viewer/v5/obv.css" type="text/css" />
+        <link rel="resource" type="application/l10n" href="https://api.cloud.pkpm.cn/bimviewer/viewer/v5/locale/locale.properties">
+        <script src="https://api.cloud.pkpm.cn/bimviewer/viewer/v5/obv.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.5.5/dist/css/uikit.min.css" />
+        <script src="https://lib.baomitu.com/echarts/4.7.0/echarts-en.min.js"></script>
+        <style>
+            @media (max-width: 760px) {
+              .my-obv-domContainer {
+                top: 110px !important;
+                right: 0 !important;
+                /*display: block !important;*/
+              }
+              .my-obv-domContainer button {
+                font-size: 12px;
+                padding: 0 10px;
+              }
+            }
+            html, body {
+              width: 100%;
+              height: 100%;
+              margin: 0px;
+              padding: 0px;
+              background: #3c3f41;
+            }
+            .my-obv-viewer {
+              position: relative;
+              width: 100%;
+              height: 100%;
+              display: inline-block;
+            }
+            .my-obv-domContainer {
+              position: absolute;
+              z-index: 99;
+              top: 160px;
+              right: 8px;
+              display: flex;
+              flex-wrap: wrap-reverse;
+              flex-direction: column;
+            }
+            .my-obv-domContainer button {
+              border-radius: 30px;
+              margin-top: 20px;
+              margin-right: 20px;
+              float: right;
+            }
+        </style>
+        </head>
+        <body>
+            <div id="viewer" class="my-obv-viewer"></div>
+
+            <script type="module">
+            async function main() {
+    const applicationOptions = {
+        getAccessToken: getAccessToken,
+        refreshAccessToken: getAccessToken,
+        serviceConfig: {
+            origin: 'https://api.cloud.pkpm.cn',
+            apiContextPath: '/bimserver/viewing/v3',
+        },
+    };
+    // 设置两个模型urn
+    let firstUrn = 'urn:bimbox.object:viewing_bucket/rvt-model';
+    let secondUrn = 'urn:bimbox.object:viewing_bucket/rvt-model';
+    // 实例化 Builder，用于模型加载
+    const builder = new OBV.Api.ObvBuilder();
+    // 创建 Application 对象
+    const application = await builder.buildApplication(applicationOptions);
+
+    // 加载多模型时，需要先加载完所有模型的document数据，再去加载模型
+    // 即所有模型执行完loadDocument方法后，再使用load3dModels方法依次加载模型
+    // 加载两个视图
+    const obvDocumentFirst = await builder.loadDocument(application, firstUrn);
+    const obvDoucmentSecond = await builder.loadDocument(application, secondUrn);
+    const obvApi = await builder.buildViewer3d(application, document.getElementById('viewer'));
+
+    // 加载第一个模型
+    const viewer3dFirstItems = obvDocumentFirst.get3dGeometryItems();
+    await builder.load3dModels(obvApi, {
+        obvDocument: obvDocumentFirst,
+        viewer3dItem: viewer3dFirstItems[0],
+        modelOffset: { x: 40, y: 0, z: 0 },
+        // rotation为旋转角度，范围0°-360°，可接受小数点，旋转方向为逆时针
+        // OBV接受的单位是弧度，需将角度转换成弧度
+        // 模型一逆时针旋转30°
+        rotation: 30 * Math.PI / 180,
+    });
+    // 加载第二个模型
+    const viewer3dSecondItems = obvDoucmentSecond.get3dGeometryItems();
+    await builder.load3dModels(obvApi, {
+        obvDocument: obvDoucmentSecond,
+        viewer3dItem: viewer3dSecondItems[1],
+        modelOffset: { x: -40, y: 0, z: 0 },
+        // 模型二逆时针旋转240°
+        rotation: 240 * Math.PI / 180,
+    });
+}
+
+main();
+
+// 访问的令牌 getAccessToken 和 令牌有效期 expiresIn 
+function getAccessToken(callBack) {
+    callBack('eyJhbGciOiJSUzI1NiJ9.eyJzY29wZSI6WyJvYnY6cmVhZCJdLCJleHAiOjE2NTIxMDUxMTQsImNsaWVudF9pZCI6ImFlY3dvcmtzLW9idi1jb21tdW5pdHkiLCJqdGkiOiIyMTBkOTkxYS1lNmExLTRkNzUtYTFmNi0xOWEwNjIzNDRmZGEifQ.Zew2Xq31-YLSFad9EkejCy5JKPtNnuQn0jGaYW0njcsYgncWfhqhdD0iLn5MAT-RXPIn-mtzqb5OvPyrhOysGVLnasm0-2cyugnQvcR_oDxSzIa8lf2ne_6ib77PfyCrGkuNbbGLk-hAZc7LpEnQ1AFMxzWt4XDMb80AfMVGpPz_xcVK3V4T4ujqTXvIGrU4ASvnOSjnynXlpYrHNL6xrqqMePQ54uN_-Wtv4_-zg7xBsoTNOJp84GHCD7gaq-zdDsfX0JGiqqXdiDJw8rBoDRY0nj6t30fFI0wRf6tQ7hOsVdpUPvv3B4kl3azqhmMj0HYrHgnpaOB3ToQ2RV4dPw', 36000)
+}
+
+            </script>
+        </body>
+    </html>
